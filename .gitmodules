@@ -2,3 +2,7 @@
 	path = frontend
 	url = git@github.com:daiark/ronelan_frontend.git
 	branch = main
+[submodule "backend"]
+	path = backend
+	url = git@github.com:daiark/ronelan_backend.git
+	branch = main
