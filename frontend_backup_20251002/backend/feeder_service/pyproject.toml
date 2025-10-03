@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "feeder_service"
+version = "0.1.0"
+description = "DNC Feeder FastAPI service for Raspberry Pi"
+authors = [{name = "Ronelan", email = "dev@ronelan.local"}]
+requires-python = ">=3.10"
+dependencies = [
+  "fastapi==0.111.0",
+  "uvicorn[standard]==0.30.0",
+  "pydantic==2.7.1",
+  "pyserial==3.5",
+  "python-multipart==0.0.9",
+]
+
+[tool.uvicorn]
+factory = false
+host = "0.0.0.0"
+port = 8081
+reload = true

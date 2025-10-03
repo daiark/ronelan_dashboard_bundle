@@ -1,0 +1,14 @@
+server:
+  port: "8081"
+
+database:
+  host: "timescale_db"
+  port: "5432"
+  user: "user"
+  password: "password"
+  dbname: "cnc_monitor"
+
+nats:
+  url: "nats://nats_server:4222"
+  stream_name: "CNC_DATA"
+  consumer_name: "PROCESSOR"

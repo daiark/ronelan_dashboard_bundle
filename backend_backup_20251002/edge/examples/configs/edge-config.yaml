@@ -1,0 +1,171 @@
+# CNC Edge Agent Configuration
+# This file configures the edge agent for Raspberry Pi deployment
+
+agent:
+  machine_id: "CNC-001"
+  location: "Factory-Floor-A-Section-1"
+  sampling_rate: "100ms"  # How often to sample sensors
+  log_level: "info"       # debug, info, warn, error
+
+# Sensor configurations
+sensors:
+  # GPIO-based digital sensors
+  - name: "spindle_state"
+    type: "gpio"
+    address: "18"  # GPIO pin 18
+    enabled: true
+    config:
+      mode: "input"
+      pull: "up"
+    metadata:
+      description: "Spindle running state"
+      units: "boolean"
+      tags:
+        component: "spindle"
+        priority: "high"
+
+  # I2C temperature sensor
+  - name: "ambient_temp"
+    type: "i2c"
+    address: "0x48"  # I2C address
+    enabled: true
+    config:
+      bus: 1
+      register: 0x00
+    metadata:
+      description: "Ambient temperature sensor"
+      units: "celsius"
+      range:
+        min: -40.0
+        max: 125.0
+      precision: 2
+      tags:
+        component: "environment"
+        priority: "medium"
+
+  # Serial/Modbus sensor for CNC controller
+  - name: "cnc_controller"
+    type: "modbus"
+    address: "/dev/ttyUSB0"
+    enabled: true
+    config:
+      baud_rate: 9600
+      data_bits: 8
+      parity: "none"
+      stop_bits: 1
+      slave_id: 1
+      registers:
+        - address: 0x0001  # Spindle speed
+          type: "holding"
+          count: 1
+        - address: 0x0002  # Feed rate
+          type: "holding"
+          count: 1
+        - address: 0x0010  # Position X
+          type: "input"
+          count: 2  # 32-bit float
+    metadata:
+      description: "CNC controller via Modbus"
+      tags:
+        component: "controller"
+        priority: "critical"
+
+  # Simulated sensor for testing
+  - name: "test_sensor"
+    type: "simulator"
+    address: "virtual"
+    enabled: true
+    config:
+      pattern: "sine"
+      frequency: 0.1  # Hz
+      amplitude: 100.0
+      offset: 50.0
+    metadata:
+      description: "Simulated sensor for testing"
+      units: "units"
+      range:
+        min: -50.0
+        max: 150.0
+      tags:
+        component: "test"
+        priority: "low"
+
+# Multi-tier buffering configuration
+buffering:
+  # Hot buffer (in-memory, fastest access)
+  hot_buffer:
+    size: 1000          # Number of messages
+    timeout: "5s"       # Force flush after this time
+    high_water: 0.8     # Trigger adaptation at 80% full
+
+  # Warm buffer (local database, persistent)
+  warm_buffer:
+    size: 10000                           # Number of messages
+    path: "/var/lib/cnc-edge/warm.db"     # Database file path
+    batch_size: 100                       # Messages per batch operation
+    sync_timeout: "10s"                   # Force sync interval
+
+  # Cold buffer (file storage, long-term)
+  cold_buffer:
+    path: "/var/lib/cnc-edge/cold/"       # Directory for cold storage
+    max_size: 1073741824                  # 1GB max total size
+    compression: true                     # Enable compression
+    archive_after: "24h"                  # Archive files older than 24h
+
+# NATS JetStream connection
+nats:
+  url: "nats://cnc-monitor.local:4222"
+  stream: "CNC_DATA"
+  subject_prefix: "CNC.EDGE"
+  reconnect_delay: "1s"
+  max_reconnects: 10
+  buffer_size: 1000
+  batch_size: 50        # Messages per batch
+  batch_timeout: "100ms"
+  compression_min_kb: 10  # Compress batches larger than 10KB
+  
+  # TLS configuration (optional)
+  tls:
+    enabled: false
+    cert_file: "/etc/cnc-edge/certs/client.crt"
+    key_file: "/etc/cnc-edge/certs/client.key"
+    ca_file: "/etc/cnc-edge/certs/ca.crt"
+  
+  # Credentials (optional)
+  # credentials: "/etc/cnc-edge/creds/edge.creds"
+
+# Health monitoring and alerting
+health:
+  check_interval: "30s"
+  metrics_retention: "1h"
+  
+  # Threshold values for alerts
+  thresholds:
+    cpu_percent: 75.0
+    memory_percent: 80.0
+    disk_percent: 85.0
+    temperature_c: 75.0      # Raspberry Pi temperature
+    buffer_percent: 90.0
+    error_rate: 0.05         # 5% error rate
+    network_latency_ms: 1000 # 1 second max latency
+  
+  # Alert configurations
+  alerts:
+    - type: "log"
+      level: "warning"
+      config:
+        format: "structured"
+    
+    - type: "nats"
+      level: "error"
+      config:
+        subject: "CNC.ALERTS.EDGE"
+        include_metrics: true
+    
+    # Webhook alerting (optional)
+    # - type: "webhook"
+    #   level: "critical"
+    #   config:
+    #     url: "https://monitoring.company.com/webhooks/cnc-alerts"
+    #     timeout: "5s"
+    #     retry_count: 3

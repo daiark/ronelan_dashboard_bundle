@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cnc-dnc-service"
+version = "0.1.0"
+description = "Minimal DNC web control for Heidenhain serial sender (FastAPI + HTMX)"
+authors = [{ name = "RoneLan", email = "dev@example.com" }]
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi==0.111.0",
+  "uvicorn[standard]==0.30.1",
+  "nats-py==2.6.0",
+  "pyserial==3.5",
+  "pydantic==2.8.2",
+  "Jinja2==3.1.4",
+  "python-multipart==0.0.9"
+]
+
+[tool.uvicorn]
+app = "dnc_service.main:app"
+host = "0.0.0.0"
+port = 8083
+log_level = "info"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["dnc_service*"]
+
+[tool.setuptools.package-data]
+# Include HTML templates inside the installed package
+"dnc_service" = ["templates/*.html"]
+

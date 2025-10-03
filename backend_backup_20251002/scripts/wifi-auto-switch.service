@@ -1,0 +1,16 @@
+[Unit]
+Description=WiFi Auto-Switch Service
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/wifi-auto-switch.sh
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=wifi-auto-switch
+
+[Install]
+WantedBy=multi-user.target

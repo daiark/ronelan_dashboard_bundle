@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<section>
+  <h3>Transfer Started</h3>
+  <p>Transfer ID: <code class="mono">{{transfer_id}}</code></p>
+  <div id="progress-fields">
+    <p>State: <span id="st">starting</span></p>
+    <p>Line: <span id="ln">0</span> / <span id="total">0</span></p>
+    <p>Rate: <span id="rate">0.0</span> lines/s</p>
+    <p>ETA: <span id="eta">-</span> s</p>
+  </div>
+  <button id="cancel-btn" hx-post="/dnc/transfers/{{transfer_id}}/cancel" hx-target="#cancel-result" hx-swap="innerHTML">Cancel</button>
+  <span id="cancel-result"></span>
+</section>
+<script>
+  const es = new EventSource('/events/{{transfer_id}}');
+  es.addEventListener('progress', (ev) => {
+    const data = JSON.parse(ev.data);
+    if (data.state) document.getElementById('st').textContent = data.state;
+    if (typeof data.line === 'number') document.getElementById('ln').textContent = data.line;
+    if (typeof data.lines_total === 'number') document.getElementById('total').textContent = data.lines_total;
+    if (typeof data.rate_lps === 'number') document.getElementById('rate').textContent = data.rate_lps.toFixed(2);
+    if (typeof data.eta_sec === 'number') document.getElementById('eta').textContent = data.eta_sec.toFixed(0);
+  });
+</script>
+{% endblock %}
+

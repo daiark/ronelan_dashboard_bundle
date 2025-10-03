@@ -1,0 +1,35 @@
+agent:
+  machine_id: "CNC-PI-002"
+  location: "Raspberry-Pi-Edge-2"
+  sampling_rate: "100ms"
+  log_level: "info"
+
+sensors:
+  - name: "cnc_simulator"
+    type: "simulator"
+    enabled: true
+    config:
+      pattern: "sine"
+      frequency: 0.1
+      amplitude: 100.0
+      offset: 50.0
+
+buffering:
+  hot_buffer:
+    capacity: 1048576  # 1MB
+  warm_buffer:
+    path: "/var/tmp/cnc-agent/warm.buffer"
+    size: 10485760    # 10MB
+  cold_buffer:
+    path: "/var/tmp/cnc-agent/cold.log"
+    max_size: 104857600  # 100MB
+  batching:
+    size: 100
+    timeout: "200ms"
+
+nats:
+  url: "nats://192.168.1.132:4222"
+  stream: "CNC_DATA"
+  subject_prefix: "CNC_DATA.edge"
+  max_reconnects: -1  # -1 = infinite reconnection attempts
+  reconnect_delay: "2s"

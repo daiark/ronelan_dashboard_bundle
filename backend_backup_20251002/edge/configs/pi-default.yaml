@@ -1,0 +1,49 @@
+# Default Pi Configuration
+# Auto-detects NATS server on local network
+
+machine:
+  id: "CNC-PI-001"  # Auto-generated based on hostname
+  location: "factory-floor"
+  sampling_rate: 100
+
+nats:
+  # Auto-discovery: tries common IPs on network
+  url: "nats://192.168.1.132:4222"
+  stream: "CNC_DATA"
+  subject_prefix: "CNC_DATA.edge"
+  reconnect_delay: "1s"
+  max_reconnects: 10
+
+# Simplified buffering - primarily uses single-tier ring buffer
+buffering:
+  hot_buffer:
+    capacity: 1048576  # 1MB ring buffer
+  warm_buffer:
+    path: "/tmp/cnc-agent/warm.buffer"
+    size: 10485760  # 10MB
+  cold_buffer:
+    path: "/tmp/cnc-agent/cold.log"
+    max_size: 104857600  # 100MB
+  batching:
+    size: 10  # Smaller batches for Pi
+    timeout: "200ms"
+
+# Simplified sensors - auto-detect or simulate
+sensors:
+  - name: "temperature"
+    type: "temperature"
+    unit: "celsius"
+    simulate: true
+  - name: "spindle_speed"
+    type: "rpm"
+    unit: "rpm"
+    simulate: true
+
+health:
+  check_interval: "30s"
+  metrics_retention: "1h"
+
+# Logging
+logging:
+  level: "info"
+  format: "json"

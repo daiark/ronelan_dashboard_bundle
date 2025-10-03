@@ -1,0 +1,45 @@
+services:
+  monitor:
+    build: .
+    container_name: monitor_app
+    ports:
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_started
+
+  postgres:
+    image: timescale/timescaledb:latest-pg15
+    container_name: timescale_db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d cnc_monitor"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=cnc_monitor
+      - TZ=Europe/Berlin
+      - PGTZ=Europe/Berlin
+      - POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts:/docker-entrypoint-initdb.d
+
+  nats:
+    image: nats:2.9-alpine
+    container_name: nats_server
+    # Enable JetStream and HTTP monitoring on 8222
+    command: ["-js", "-m", "8222", "-p", "4222"]
+    ports:
+      - "4222:4222" # Client port
+      - "8222:8222" # HTTP monitoring port
+
+volumes:
+  postgres_data:

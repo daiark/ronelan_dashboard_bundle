@@ -3,6 +3,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 
@@ -25,6 +26,15 @@ def _templates() -> Jinja2Templates:
 
 
 app = FastAPI(title="CNC DNC Service")
+
+# CORS for frontend dev and integrations
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # static (optional if you add local assets)
 static_dir = Path(__file__).resolve().parent.parent / "static"
