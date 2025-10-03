@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<section>
+  <h3>Programs</h3>
+  <form hx-post="/files/upload" hx-encoding="multipart/form-data" hx-target="#upload-result" hx-swap="innerHTML">
+    <input type="file" name="file" />
+    <button type="submit">Upload</button>
+    <span id="upload-result"></span>
+  </form>
+  <table role="grid">
+    <thead><tr><th>Name</th><th>Size</th><th>SHA</th><th>Actions</th></tr></thead>
+    <tbody>
+      {% for f in files %}
+      <tr>
+        <td class="mono">{{f.name}}</td>
+        <td>{{f.size}}</td>
+        <td class="mono">{{f.sha}}</td>
+        <td>
+          <a href="/files/{{f.name}}">Edit</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% if edit_name %}
+<section>
+  <h3>Edit {{edit_name}}</h3>
+  <form hx-post="/files/{{edit_name}}/save" hx-target="#save-result" hx-swap="innerHTML">
+    <textarea name="content" rows="20" class="mono">{{edit_content}}</textarea>
+    <button type="submit">Save</button>
+    <span id="save-result"></span>
+  </form>
+</section>
+{% endif %}
+{% endblock %}
+

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+<section>
+  <h3>Start Transfer</h3>
+  <form id="start-form" hx-post="/dnc/transfers" hx-trigger="submit" hx-target="#transfer-panel" hx-swap="innerHTML">
+    <div class="grid">
+      <label>Port
+        <select name="port">
+          {% for p in ports %}<option value="{{p}}">{{p}}</option>{% endfor %}
+        </select>
+      </label>
+      <label>Program file
+        <select name="file_name">
+          {% for f in files %}<option value="{{f}}">{{f}}</option>{% endfor %}
+        </select>
+      </label>
+    </div>
+    <div class="grid">
+      <label>Mode
+        <select name="mode">
+          <option value="bcc_listen" selected>bcc_listen</option>
+          <option value="standard">standard</option>
+          <option value="bcc">bcc</option>
+          <option value="receive">receive</option>
+        </select>
+      </label>
+      <label>Baud <input type="number" name="baud" value="9600" /></label>
+      <label>Framing
+        <select name="bits">
+          <option value="7" selected>7</option>
+          <option value="8">8</option>
+        </select>
+        <select name="parity">
+          <option value="E" selected>E</option>
+          <option value="N">N</option>
+          <option value="O">O</option>
+        </select>
+        <select name="stopbits">
+          <option value="2" selected>2</option>
+          <option value="1">1</option>
+        </select>
+      </label>
+    </div>
+    <div class="grid">
+      <label><input type="checkbox" name="rtscts" checked /> RTS/CTS</label>
+      <label><input type="checkbox" name="xonxoff" /> XON/XOFF</label>
+      <label><input type="checkbox" name="dc1_after_bcc" /> DC1 after BCC</label>
+      <label>Delay (s) <input type="number" name="delay" step="0.01" value="0.10" /></label>
+    </div>
+    <button type="submit">Start</button>
+  </form>
+</section>
+<section id="transfer-panel"></section>
+{% endblock %}
+
