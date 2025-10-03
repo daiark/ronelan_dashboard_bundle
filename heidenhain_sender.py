@@ -71,7 +71,7 @@ def wait_for(ser: serial.Serial, targets: bytes, timeout: float) -> Optional[int
         if ser.in_waiting:
             b = ser.read(1)
             if b in [bytes([t]) for t in targets]:
-                return b
+                return b[0]
         time.sleep(0.01)
     return None
 
@@ -147,9 +147,9 @@ def recv_bcc_header(ser: serial.Serial, timeout: float) -> Tuple[bool, str, str,
             if not got_soh:
                 if b == SOH:
                     got_soh = True
-                    hdr.append(b)
+                    hdr.append(b[0])
             else:
-                hdr.append(b)
+                hdr.append(b[0])
                 if b == ETB:
                     break
         time.sleep(0.01)
@@ -159,7 +159,7 @@ def recv_bcc_header(ser: serial.Serial, timeout: float) -> Tuple[bool, str, str,
     bcc_byte = ser.read(1)
     if not bcc_byte:
         return False, "", "", "", False
-    bcc_recv = bcc_byte
+    bcc_recv = bcc_byte[0]
 
     # Check for optional DC1
     had_dc1 = False
@@ -278,7 +278,7 @@ def main():
     ap.add_argument("--file", required=True)
     ap.add_argument("--mode", choices=["standard", "drip"], default="standard")
     ap.add_argument("-b", "--baud", type=int, default=9600)
-    ap.add_argument("--bits", type=int, choices=, default=7)
+    ap.add_argument("--bits", type=int, choices=[7, 8], default=7)
     ap.add_argument("--parity", choices=["N", "E", "O"], default="E")
     ap.add_argument("--stopbits", type=int, choices=[1, 2], default=2)
     ap.add_argument("--xonxoff", action="store_true", default=True)
