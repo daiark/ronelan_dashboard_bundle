@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 class TransferRequest(BaseModel):
     port: str
     file_name: str
-    mode: str = Field(default="bcc_listen", pattern="^(standard|bcc|bcc_listen|receive)$")
+    mode: str = Field(default="drip", pattern="^(standard|drip)$")
     baud: int = 9600
     bits: int = 7
     parity: str = Field(default="E", pattern="^[NEO]$")

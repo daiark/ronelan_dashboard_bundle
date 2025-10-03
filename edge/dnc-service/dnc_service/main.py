@@ -41,14 +41,16 @@ async def health():
 async def startup():
     cfg = load_config()
     app.state.cfg = cfg
-    # NATS
+    # NATS (with timeout to prevent blocking HTTP server)
     try:
-        nc = await nats.connect(cfg.nats_url)
+        nc = await asyncio.wait_for(nats.connect(cfg.nats_url), timeout=3.0)
         js = nc.jetstream()
         app.state.nc = nc
         app.state.js = js
         app.state.publisher = NatsPublisher(js, cfg.nats_stream, cfg.machine_id)
-    except Exception:
+        print(f"Connected to NATS at {cfg.nats_url}")
+    except Exception as e:
+        print(f"NATS connection failed (non-fatal): {e}")
         app.state.nc = None
         app.state.js = None
         app.state.publisher = None
@@ -67,7 +69,7 @@ async def startup():
             "xonxoff": True,
             "timeout": 1.0,
         },
-        "mode": {"value": "bcc_listen"},
+        "mode": {"value": "drip"},
     }
     app.state.files: Dict[str, str] = {}
     app.state.current_transfer_id = None
@@ -144,7 +146,7 @@ async def send_compat(body: Dict[str, Any]):
     fn = app.state.files[fid]
     cfg = app.state.current_cfg
     serial = cfg.get("serial", {})
-    mode = cfg.get("mode", {}).get("value", "bcc_listen")
+    mode = cfg.get("mode", {}).get("value", "drip")
     req = TransferRequest(
         port=str(serial.get("port", "/dev/serial0")),
         file_name=fn,
@@ -156,7 +158,7 @@ async def send_compat(body: Dict[str, Any]):
         rtscts=bool(serial.get("rtscts", False)),
         xonxoff=bool(serial.get("xonxoff", True)),
         dc1_after_bcc=False,
-        delay=float(cfg.get("bcc", {}).get("delay", 0.10)) if isinstance(cfg.get("bcc"), dict) else 0.10,
+        delay=float(cfg.get("drip", {}).get("delay", 0.0)) if isinstance(cfg.get("drip"), dict) else 0.0,
     )
     tid = await app.state.tm.start(req)
     app.state.current_transfer_id = tid

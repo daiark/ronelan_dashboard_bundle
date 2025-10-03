@@ -217,7 +217,7 @@ async def start_transfer(request: Request):
     req = TransferRequest(
         port=str(form.get("port")),
         file_name=str(form.get("file_name")),
-        mode=str(form.get("mode", "bcc_listen")),
+        mode=str(form.get("mode", "drip")),
         baud=int(form.get("baud", 9600)),
         bits=int(form.get("bits", 7)),
         parity=str(form.get("parity", "E")),

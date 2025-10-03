@@ -19,7 +19,11 @@ Quick start
 3) Use the app
 - http://localhost:5173/dnc
 - Select device (DEVICE_ID from config.env)
-- Refresh ports, upload program, choose mode (standard|bcc_listen), Start.
+- Refresh ports, upload program, choose mode (standard|drip), Start.
+
+Mode details:
+- standard: One-shot file transfer to TNC memory (RECEIVE FILE mode)
+- drip: Continuous execution via EXT1 (PROGRAM RUN → EXT1)
 
 Frequently used targets
 - make backend-up        # docker compose up -d in backend
@@ -29,12 +33,22 @@ Frequently used targets
 - make pi-logs           # journalctl -u cnc-dnc.service -f
 - make frontend-dev      # start Vite dev server (Node 18+ required)
 
-Hotspot / roaming networks (CKH best practice)
+Hotspot / roaming networks
+
+Method 1: Auto-detection (recommended)
+- Connect laptop and Pi to your portable hotspot
+- Run: make hotspot
+  - Auto-detects laptop IP and Pi hostname
+  - Updates config.env automatically
+  - Deploys to Pi with correct NATS URL
+- Then: make backend-up && make gen-frontend-env && cd frontend && npm run dev
+
+Method 2: Manual mDNS (CKH best practice)
 - Use mDNS hostnames instead of IPs:
   - On Pi: sudo apt-get install -y avahi-daemon; sudo hostnamectl set-hostname cncpi
   - Then set PI_HOST=cncpi.local in config.env.
   - For BACKEND_HOST use your laptop hostname + .local if the hotspot supports mDNS.
-- If mDNS isn’t available, update PI_HOST and BACKEND_HOST IPs in config.env and re-run make pi-deploy.
+- If mDNS isn't available, update PI_HOST and BACKEND_HOST IPs in config.env and re-run make pi-deploy.
 
 Pi verification checklist
 - ssh $PI_USER@$PI_HOST
@@ -42,6 +56,10 @@ Pi verification checklist
 - sudo journalctl -u cnc-dnc.service -f --no-pager
 - curl -s http://$PI_HOST:$DNC_PORT/api/v1/health
 - ls -l /var/lib/cnc-dnc/programs
+
+Migration note:
+- Frontend and Pi edge now use the new 2-mode system (standard, drip) via heidenhain_sender.py.
+- The laptop backend under frontend/backend/feeder_core/ still uses the legacy 4-mode system (standard, bcc, bcc_listen, receive) and is not affected by this change.
 
 Serial setup on the Pi (summary)
 - raspi-config: Disable login shell over serial, enable serial hardware.

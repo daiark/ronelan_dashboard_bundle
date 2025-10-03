@@ -15,11 +15,12 @@ BACKEND_DIR := backend
 FRONTEND_DIR := frontend
 EDGE_DIR := edge/dnc-service
 
-.PHONY: help backend-up backend-down backend-logs pi-deploy pi-status pi-logs frontend-dev dashboard gen-frontend-env
+.PHONY: help backend-up backend-down backend-logs pi-deploy pi-status pi-logs frontend-dev dashboard gen-frontend-env hotspot
 
 help:
 	@echo "Targets:"
 	@echo "  make dashboard     - backend up, deploy Pi DNC, start frontend"
+	@echo "  make hotspot       - auto-detect network and deploy (for portable hotspot)"
 	@echo "  make backend-up    - docker compose up -d (backend)"
 	@echo "  make backend-down  - docker compose down (backend)"
 	@echo "  make backend-logs  - tail backend logs"
@@ -78,6 +79,15 @@ gen-frontend-env:
 frontend-dev: gen-frontend-env
 	@echo "Node 18+ required. If using nvm: nvm use 20"
 	cd $(FRONTEND_DIR) && npm install && npm run dev
+
+# Hotspot mode: auto-detect IPs and deploy
+hotspot:
+	@./scripts/detect-and-deploy.sh
+	@echo ""
+	@echo "Next: Start backend and frontend:"
+	@echo "  make backend-up"
+	@echo "  make gen-frontend-env"
+	@echo "  cd frontend && npm run dev"
 
 # One-shot bring-up: backend up, deploy Pi, start frontend
 dashboard: backend-up pi-deploy gen-frontend-env
